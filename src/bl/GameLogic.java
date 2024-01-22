@@ -3,7 +3,6 @@ package bl;
 import dal.Cell;
 import dal.Direction;
 import dal.Grid;
-import dal.Singleton;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,13 +10,9 @@ public class GameLogic {
     private static volatile GameLogic instance;
     private Grid grid;
     private Cell[] snakeCells = new Cell[1];
-
     private Cell food;
-
     private Direction currentDirection = Direction.RIGHT;
-
     private Map<Direction, String> keyTextures = new HashMap<>();
-
     public static GameLogic getInstance(Grid grid, Cell snakeHead) throws Exception {
         GameLogic localInstance = instance;
 
@@ -33,7 +28,7 @@ public class GameLogic {
         return localInstance;
     }
     private GameLogic(Grid grid, Cell snakeHead) throws Exception {
-        keyTextures = InitializeKeyTextures();
+        keyTextures = initializeKeyTextures();
         this.grid = grid;
         snakeCells[0] = snakeHead;
         snakeHead.setTexture("▶");
@@ -41,14 +36,14 @@ public class GameLogic {
         food = new Cell(grid);
         food.setTexture("X");
 
-        InitializeGameTable();
+        initializeGameTable();
         SpawnFood();
     }
-    private void InitializeGameTable() throws Exception {
-        grid.SetTextureToGrid(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
+    private void initializeGameTable() throws Exception {
+        grid.setTextureToGrid(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
     }
 
-    private static HashMap<Direction, String> InitializeKeyTextures()
+    private static HashMap<Direction, String> initializeKeyTextures()
     {
         HashMap<Direction, String> keyTextures = new HashMap<>();
         keyTextures.put(Direction.LEFT, "◀");

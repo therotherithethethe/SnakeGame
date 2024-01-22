@@ -4,8 +4,8 @@ public class Grid
 {
     private static volatile Grid instance;
     private String[][] table;
-    private int xLength;
-    private int yLength;
+    private final int xLength;
+    private final int yLength;
     private final String texture = "⬜";
     private Grid(int xLength, int yLength) throws Exception {
         if (xLength <= 0 || yLength <= 0)
@@ -15,7 +15,7 @@ public class Grid
         table = new String[yLength][xLength];
         this.xLength = xLength;
         this.yLength = yLength;
-        TableInitialize();
+        tableInitialize();
     }
 
     public static Grid getInstance(int xLength, int yLength) throws Exception {
@@ -32,7 +32,7 @@ public class Grid
         }
         return localInstance;
     }
-    private void TableInitialize()
+    private void tableInitialize()
     {
         for (int i = 0; i < yLength; i++)
         {
@@ -43,7 +43,7 @@ public class Grid
         }
     }
 
-    public void SetTextureToGrid(int x, int y, String texture) throws Exception {
+    public void setTextureToGrid(int x, int y, String texture) throws Exception {
         if(x <= 0 || y <= 0 || x >= xLength + 1 || y >= yLength + 1)
         {
             // do nothing
