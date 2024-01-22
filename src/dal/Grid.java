@@ -6,8 +6,8 @@ public class Grid
     private String[][] table;
     private final int xLength;
     private final int yLength;
-    private final String texture = "⬜";
-    private Grid(int xLength, int yLength) throws Exception {
+    private final String texture = ".";
+    public Grid(int xLength, int yLength) throws Exception {
         if (xLength <= 0 || yLength <= 0)
             throw new Exception("Lengths must be positive.");
 
@@ -43,7 +43,7 @@ public class Grid
         }
     }
 
-    public void setTextureToGrid(int x, int y, String texture) throws Exception {
+    public void setTextureToGrid(int x, int y, String texture) {
         if(x <= 0 || y <= 0 || x >= xLength + 1 || y >= yLength + 1)
         {
             // do nothing

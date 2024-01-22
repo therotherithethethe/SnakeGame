@@ -1,7 +1,11 @@
 package ui;
 
+import bl.GameLogic;
+import dal.Cell;
+import dal.Grid;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
@@ -9,30 +13,15 @@ import org.jline.utils.InfoCmp;
 
 public class Main {
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         java.util.logging.Logger.getLogger("org.jline").setLevel(Level.FINEST);
 
-        Terminal terminal = TerminalBuilder.builder()
-            .dumb(true)
-            .build();
 
-        InputStream inputStream = terminal.input();
-        char key = (char) inputStream.read();
+        Grid grid = Grid.getInstance(10, 10);
+        Cell snakeHead = new Cell(grid);
+        GameLogic logic = GameLogic.getInstance(grid, snakeHead);
 
-
-        switch (key) {
-            case (char)209:
-            case (char)210: //up
-                System.out.println("mama up");
-                break;
-            case (char)208:
-            case (char)100:
-                System.out.println("mama right");
-        }
-
-
-        //terminal.puts(InfoCmp.Capability.clear_screen);
-
-        terminal.close();
+        Menu menu = new Menu(logic);
+        menu.Print();
     }
 }
