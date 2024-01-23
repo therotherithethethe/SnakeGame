@@ -1,73 +1,52 @@
 package dal;
 
-public class Grid
-{
-    private static volatile Grid instance;
+public class Grid {
     private String[][] table;
     private final int xLength;
     private final int yLength;
-    private final String texture = ".";
-    public Grid(int xLength, int yLength) throws Exception {
-        if (xLength <= 0 || yLength <= 0)
-            throw new Exception("Lengths must be positive.");
+    private final String defaultTexture = ".";
 
-
-        table = new String[yLength][xLength];
+    public Grid(int xLength, int yLength) {
+        if (xLength <= 0 || yLength <= 0) {
+            throw new IllegalArgumentException("Lengths must be positive.");
+        }
         this.xLength = xLength;
         this.yLength = yLength;
-        tableInitialize();
+        this.table = new String[yLength][xLength];
+        initializeTable();
     }
 
-    public static Grid getInstance(int xLength, int yLength) throws Exception {
-        Grid localInstance = instance;
-
-        if (localInstance == null) {
-            synchronized (Grid.class) {
-                localInstance = instance;
-
-                if (localInstance == null) {
-                    instance = localInstance = new Grid(xLength, yLength);
-                }
-            }
-        }
-        return localInstance;
-    }
-    private void tableInitialize()
-    {
-        for (int i = 0; i < yLength; i++)
-        {
-            for (int j = 0; j < xLength; j++)
-            {
-                table[i][j] = texture;
+    private void initializeTable() {
+        for (int i = 0; i < yLength; i++) {
+            for (int j = 0; j < xLength; j++) {
+                table[i][j] = defaultTexture;
             }
         }
     }
 
-    public void setTextureToGrid(int x, int y, String texture) {
-        if(x <= 0 || y <= 0 || x >= xLength + 1 || y >= yLength + 1)
-        {
-            // do nothing
-        }
-        else
-        {
+    public void setTexture(int x, int y, String texture) {
+        if (isPositionValid(x, y)) {
             table[y - 1][x - 1] = texture;
         }
+    }
+    public String getDefaultTexture() {
+        return defaultTexture;
+    }
 
+    private boolean isPositionValid(int x, int y) {
+        return x > 0 && y > 0 && x <= xLength && y <= yLength;
     }
 
     public String[][] getTable() {
         return table;
     }
 
-    public int getxLength() {
+    public int getXLength() {
         return xLength;
     }
 
-    public int getyLength() {
+    public int getYLength() {
         return yLength;
     }
-
-    public String getTexture() {
-        return texture;
-    }
 }
+

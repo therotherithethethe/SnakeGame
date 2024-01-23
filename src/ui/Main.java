@@ -17,9 +17,9 @@ public class Main {
         java.util.logging.Logger.getLogger("org.jline").setLevel(Level.FINEST);
 
 
-        Grid grid = Grid.getInstance(10, 10);
+        Grid grid = new Grid(6, 4);
         Cell snakeHead = new Cell(grid);
-        GameLogic logic = GameLogic.getInstance(grid, snakeHead);
+        GameLogic logic = new GameLogic(grid, snakeHead);
 
         Menu menu = new Menu(logic);
         menu.Print();

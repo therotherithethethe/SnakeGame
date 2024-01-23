@@ -9,8 +9,7 @@ import org.jline.terminal.Terminal;
 import org.jline.utils.InfoCmp;
 import org.jline.utils.NonBlockingReader;
 
-public class Menu
-{
+public class Menu {
     private Cell snakeHead;
     private Grid grid;
     private GameLogic logic;
@@ -20,71 +19,67 @@ public class Menu
 
     int cellCounter;
 
-    public Menu(GameLogic logic) throws IOException {
+    public Menu(GameLogic logic) {
         terminal = logic.getTerminal();
         reader = logic.getReader();
         grid = logic.getGrid();
         snakeHead = logic.getSnakeCells()[0];
         this.logic = logic;
-        //cellCounter = logic.getSnakeCells().length;
         cellCounter = 1;
     }
 
     public void Print() throws Exception {
 
-        Grid gridBuffer = new Grid(grid.getxLength(), grid.getyLength());
-        Cell snakeHead = new Cell(gridBuffer);
+        while (true) {
+            Grid gridBuffer = new Grid(grid.getXLength(), grid.getYLength());
+            Cell snakeHead = new Cell(gridBuffer);
 
-        GameLogic logicBuffer = new GameLogic(gridBuffer, snakeHead);
+            GameLogic logicBuffer = new GameLogic(gridBuffer, snakeHead);
+            logicBuffer.setReader(logic.getReader());
 
-        terminal.puts(InfoCmp.Capability.clear_screen);
-        System.out.println(getCenteredText("1. play"));
-        InputStream inputStream = terminal.input();
-        char key = (char) inputStream.read();
+            terminal.puts(InfoCmp.Capability.clear_screen);
+            System.out.println(getCenteredText("1. play"));
+            InputStream inputStream = terminal.input();
 
-        switch (key)
-        {
-            case '1':
-                while(!logic.IsGameOver() && cellCounter != grid.getyLength()* grid.getxLength() - 1)
-                {
-                    cellCounter = logic.getSnakeCells().length;
-                    printCurrentGameStage();
-                    Thread.sleep(400);
-                    logic.UpdateGameTable();
+            char key = (char) inputStream.read();
 
-                }
+            switch (key) {
+                case '1':
+                    while (!logic.isGameOver() && cellCounter != grid.getYLength() * grid.getXLength() - 1) {
+                        cellCounter = logic.getSnakeCells().length;
+                        printCurrentGameStage();
+                        Thread.sleep(400);
+                        logic.updateGameTable();
+                    }
 
-                terminal.puts(InfoCmp.Capability.clear_screen);
-                if (logic.IsGameOver())
-                {
-                    System.out.println("YOU ARE LOOSER");
-                }
-                else
-                {
-                    System.out.println("YOU ARE WINNER");
-                }
+                    terminal.puts(InfoCmp.Capability.clear_screen);
+                    if (logic.isGameOver()) {
+                        System.out.println("YOU ARE LOOSER");
+                    } else {
+                        System.out.println("YOU ARE WINNER");
+                    }
+                    break;
+                default:
+                    break;
+            }
+            Thread.sleep(1500);
+            inputStream.read();
 
-                break;
-            default:
-                break;
+            cellCounter = 1;
+            this.logic = logicBuffer;
+            this.snakeHead = snakeHead;
+            this.grid = gridBuffer;
         }
-        inputStream.read();
-        grid = gridBuffer;
-        this.snakeHead = snakeHead;
-        logic = logicBuffer;
-        cellCounter = 1;
-        reader = logicBuffer.getReader();
-
-        Print();
     }
+
     public void printCurrentGameStage()
     {
         terminal.puts(InfoCmp.Capability.clear_screen);
         StringBuilder txt = new StringBuilder();
-        for (int y = 0; y < grid.getyLength(); y++)
+        for (int y = 0; y < grid.getYLength(); y++)
         {
             txt.append("\n");
-            for (int x = 0; x < grid.getxLength(); x++)
+            for (int x = 0; x < grid.getXLength(); x++)
             {
                 txt.append(grid.getTable()[y][x]);
             }

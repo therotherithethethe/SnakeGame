@@ -1,10 +1,9 @@
 package dal;
 
-public class Cell
-{
+public class Cell {
     private int x = 1;
     private int y = 1;
-    private Grid grid;
+    private final Grid grid;
     private String texture = "O";
 
     public Cell(Grid grid)

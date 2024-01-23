@@ -11,12 +11,10 @@ import java.util.Random;
 import org.jline.keymap.KeyMap;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp;
 import org.jline.utils.InfoCmp.Capability;
 import org.jline.utils.NonBlockingReader;
 
 public class GameLogic {
-    private static volatile GameLogic instance;
     private Grid grid;
     private Cell[] snakeCells = new Cell[1];
     private Cell food;
@@ -26,20 +24,6 @@ public class GameLogic {
     private KeyMap<Capability> keyMap;
     private Terminal terminal;
     private Map<Direction, String> keyTextures = new HashMap<>();
-    public static GameLogic getInstance(Grid grid, Cell snakeHead) throws Exception {
-        GameLogic localInstance = instance;
-
-        if (localInstance == null) {
-            synchronized (GameLogic.class) {
-                localInstance = instance;
-
-                if (localInstance == null) {
-                    instance = localInstance = new GameLogic(grid, snakeHead);
-                }
-            }
-        }
-        return localInstance;
-    }
     public GameLogic(Grid grid, Cell snakeHead) throws Exception {
         terminal = TerminalBuilder.builder()
             .dumb(true)
@@ -50,7 +34,7 @@ public class GameLogic {
         keyTextures = initializeKeyTextures();
         this.grid = grid;
         snakeCells[0] = snakeHead;
-        snakeHead.setTexture("▶");
+        snakeHead.setTexture(keyTextures.get(currentDirection));
 
         food = new Cell(grid);
         food.setTexture("X");
@@ -59,7 +43,7 @@ public class GameLogic {
         spawnFood();
     }
     private void initializeGameTable() throws Exception {
-        grid.setTextureToGrid(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
+        grid.setTexture(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
     }
 
     private static HashMap<Direction, String> initializeKeyTextures() {
@@ -77,17 +61,13 @@ public class GameLogic {
         int x, y;
         int cellCounter = snakeCells.length;
 
-        if( cellCounter == grid.getxLength()*grid.getyLength())
-        {
-            //do nothing, cause loop would be infinity
-        }
-        else
+        if(cellCounter != grid.getXLength()*grid.getYLength())
         {
             do
             {
                 isFoodXYEqualSnakeXY = false;
-                x = r.nextInt(1, grid.getxLength() + 1);
-                y = r.nextInt(1, grid.getyLength() + 1);
+                x = r.nextInt(1, grid.getXLength() + 1);
+                y = r.nextInt(1, grid.getYLength() + 1);
 
                 for (int i = 0; i < snakeCells.length; i++)
                 {
@@ -103,11 +83,11 @@ public class GameLogic {
 
             food.setX(x);
             food.setY(y);
-            grid.setTextureToGrid(food.getX(), food.getY(), food.getTexture());
+            grid.setTexture(food.getX(), food.getY(), food.getTexture());
         }
 
     }
-    public void UpdateGameTable() throws IOException {
+    public void updateGameTable() throws IOException {
         Cell[] coordinatesBuffer = bufferCoordinates();
         Cell lastCell = storeLastCell();
 
@@ -189,20 +169,28 @@ public class GameLogic {
     }
     private void updateGridTexture(Cell[] coordinatesBuffer) {
         for(var cell : snakeCells) {
-            grid.setTextureToGrid(cell.getX(), cell.getY(), cell.getTexture());
+            grid.setTexture(cell.getX(), cell.getY(), cell.getTexture());
         }
 
         Cell tailCell = coordinatesBuffer[coordinatesBuffer.length - 1];
-        grid.setTextureToGrid(tailCell.getX(), tailCell.getY(), grid.getTexture());
+        if((snakeCells[0].getX() == coordinatesBuffer[coordinatesBuffer.length - 1].getX())
+            && (snakeCells[0].getY() == coordinatesBuffer[coordinatesBuffer.length - 1].getY())
+            && (snakeCells.length != 1)) {
+            grid.setTexture(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
+        }
+        else {
+            grid.setTexture(tailCell.getX(), tailCell.getY(), grid.getDefaultTexture());
+        }
+
     }
     private void checkAndHandleFoodCollision(Cell lastCell) {
         if (snakeCells[0].getX() == food.getX() && snakeCells[0].getY() == food.getY())
         {
-            ExpandSnake(lastCell);
+            expandSnake(lastCell);
             spawnFood();
         }
     }
-    private void ExpandSnake(Cell lastCell)
+    private void expandSnake(Cell lastCell)
     {
         Cell[] newSnakeCells = new Cell[snakeCells.length + 1];
         System.arraycopy(snakeCells, 0, newSnakeCells, 0, snakeCells.length);
@@ -212,9 +200,9 @@ public class GameLogic {
         newSnakeCells[newSnakeCells.length - 1].setY(lastCell.getY());
 
         snakeCells = newSnakeCells;
-        grid.setTextureToGrid(lastCell.getX(), lastCell.getY(), lastCell.getTexture());
+        grid.setTexture(lastCell.getX(), lastCell.getY(), lastCell.getTexture());
     }
-    public boolean IsGameOver()
+    public boolean isGameOver()
     {
         for (int i = 0; i < snakeCells.length; i++)
         {
@@ -230,7 +218,10 @@ public class GameLogic {
                 }
             }
         }
-        return snakeCells[0].getX() == grid.getxLength() + 1 || snakeCells[0].getX() < 1 || snakeCells[0].getY() == grid.getyLength() + 1 || snakeCells[0].getY() < 1;
+        return snakeCells[0].getX() == grid.getXLength() + 1 ||
+            snakeCells[0].getX() < 1 ||
+            snakeCells[0].getY() == grid.getYLength() + 1 ||
+            snakeCells[0].getY() < 1;
 
     }
 
@@ -248,5 +239,9 @@ public class GameLogic {
 
     public NonBlockingReader getReader() {
         return reader;
+    }
+
+    public void setReader(NonBlockingReader reader) {
+        this.reader = reader;
     }
 }
