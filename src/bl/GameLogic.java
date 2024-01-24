@@ -4,15 +4,9 @@ import dal.Cell;
 import dal.Direction;
 import dal.Grid;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import org.jline.keymap.KeyMap;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
-import org.jline.utils.InfoCmp.Capability;
-import org.jline.utils.NonBlockingReader;
 
 public class GameLogic {
     private Grid grid;
@@ -20,16 +14,13 @@ public class GameLogic {
     private Cell food;
     private Direction currentDirection = Direction.RIGHT;
 
-    private NonBlockingReader reader;
-    private KeyMap<Capability> keyMap;
-    private Terminal terminal;
     private Map<Direction, String> keyTextures = new HashMap<>();
     public GameLogic(Grid grid, Cell snakeHead) throws Exception {
-        terminal = TerminalBuilder.builder()
+        /*terminal = TerminalBuilder.builder()
             .dumb(true)
             .encoding(StandardCharsets.UTF_8)
             .build();
-        reader = terminal.reader();
+        reader = terminal.reader();*/
 
         keyTextures = initializeKeyTextures();
         this.grid = grid;
@@ -87,18 +78,14 @@ public class GameLogic {
         }
 
     }
-    public void updateGameTable() throws IOException {
+    public void updateGameTable(Direction direction) throws IOException {
         Cell[] coordinatesBuffer = bufferCoordinates();
         Cell lastCell = storeLastCell();
 
-        updateDirectionIfKeyPressed();
-
+        currentDirection = direction;
         updateHeadPositionBasedOnDirection();
-
         moveBody(coordinatesBuffer);
-
         updateGridTexture(coordinatesBuffer);
-
         checkAndHandleFoodCollision(lastCell);
     }
     private Cell[] bufferCoordinates() {
@@ -117,7 +104,7 @@ public class GameLogic {
         cell.setY(snakeCells[snakeCells.length-1].getY());
         return cell;
     }
-    private void updateDirectionIfKeyPressed() throws IOException {
+    /*private void updateDirectionIfKeyPressed() throws IOException {
         if (reader.ready()) {
             int code = reader.read();
             if (code != -1) {
@@ -140,7 +127,7 @@ public class GameLogic {
                 }
             }
         }
-    }
+    }*/
 
     private void updateHeadPositionBasedOnDirection() {
         switch (currentDirection)
@@ -202,7 +189,7 @@ public class GameLogic {
         snakeCells = newSnakeCells;
         grid.setTexture(lastCell.getX(), lastCell.getY(), lastCell.getTexture());
     }
-    public boolean isGameOver()
+    public boolean isGameLose()
     {
         for (int i = 0; i < snakeCells.length; i++)
         {
@@ -222,7 +209,12 @@ public class GameLogic {
             snakeCells[0].getX() < 1 ||
             snakeCells[0].getY() == grid.getYLength() + 1 ||
             snakeCells[0].getY() < 1;
-
+    }
+    public boolean isGameWon() {
+        return getCellCounter() == grid.getXLength() * grid.getYLength();
+    }
+    private int getCellCounter() {
+        return snakeCells.length;
     }
 
     public Grid getGrid() {
@@ -233,7 +225,7 @@ public class GameLogic {
         return snakeCells;
     }
 
-    public Terminal getTerminal() {
+    /*public Terminal getTerminal() {
         return terminal;
     }
 
@@ -243,5 +235,5 @@ public class GameLogic {
 
     public void setReader(NonBlockingReader reader) {
         this.reader = reader;
-    }
+    }*/
 }
