@@ -1,6 +1,8 @@
 package ui;
 
+import bl.AccountService;
 import bl.GameLogic;
+import dal.Account;
 import dal.Cell;
 import dal.Direction;
 import dal.Grid;
@@ -12,13 +14,15 @@ import org.jline.utils.InfoCmp;
 import org.jline.utils.NonBlockingReader;
 
 public class GameMenu {
-    private Cell snakeHead;
     private Grid grid;
     private GameLogic logic;
     private NonBlockingReader reader;
     private Terminal terminal;
     private Direction currentDirection = Direction.RIGHT;
     private boolean isGameSuspended = false;
+    private AccountService accService = AccountService.getInstance();
+    private Account logedAccount;
+    private boolean isUserLoged = false;
 
     int cellCounter;
 
@@ -36,15 +40,22 @@ public class GameMenu {
     public void displayMenu() throws Exception {
         while (true) {
             clearScreen();
+            loginSystem();
             printOptions();
             handleUserInput();
         }
     }
+    private void loginSystem() {
+        clearScreen();
+        System.out.print("provide your username");
+    }
     private void printOptions() {
-        String gameMenuText = "1. Play\n"
-            + "2. Continue\n"
-            + "3. Records\n"
-            + "ESC. Logout";
+        String gameMenuText = """
+            1. Play
+            2. Continue
+            3. Records
+            ESC. Logout""";
+
         System.out.print(getCenteredText(gameMenuText));
 
     }
@@ -55,7 +66,7 @@ public class GameMenu {
         char key = (char) terminal.input().read();
         switch (key) {
             case '1' -> startGame();
-            case 27 -> System.exit(0);
+            case 27 -> System.exit(0);  //ESC
         }
     }
     private void startGame() throws Exception {
@@ -68,24 +79,20 @@ public class GameMenu {
 
         cellCounter = 1;
         this.logic = logicBuffer;
-        this.snakeHead = snakeHead;
+        //this.snakeHead = snakeHead;
         this.grid = gridBuffer;
         currentDirection = Direction.RIGHT;
     }
 
     private void gameLoop() throws InterruptedException, IOException {
-        while (!logic.isGameLose() && !logic.isGameWon()) {
+        while (!logic.isGameLose() && !logic.isGameWon() && !isGameSuspended) {
             cellCounter = logic.getSnakeCells().length;
             printCurrentGameStage();
             Thread.sleep(400);
             setDirectionByKey();
             logic.updateGameTable(currentDirection);
-
-            if(isGameSuspended) {
-                isGameSuspended = false;
-                break;
-            }
         }
+        isGameSuspended = false;
     }
 
     private void printGameOverMessage() throws InterruptedException, IOException {
@@ -111,7 +118,6 @@ public class GameMenu {
                 txt.append(grid.getTable()[y][x]);
             }
         }
-        txt.append("\n");
         txt.append("\n" + cellCounter);
 
         System.out.println(getCenteredText(txt.toString()));
@@ -165,7 +171,7 @@ public class GameMenu {
                     case 'd':
                         currentDirection = Direction.RIGHT;
                         break;
-                    case (char)27:
+                    case 27:
                         isGameSuspended = true;
                 }
             }

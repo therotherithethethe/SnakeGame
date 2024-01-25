@@ -10,6 +10,7 @@
     <orderEntry type="library" name="jline-3.24.1" level="project" />
     <orderEntry type="library" name="jna-5.3.1" level="project" />
     <orderEntry type="library" name="jansi-1.18" level="project" />
+    <orderEntry type="library" name="gson-2.10.1" level="project" />
   </component>
   <component name="SonarLintModuleSettings">
     <option name="uniqueId" value="05dfd026-3fa3-4dd1-a3c8-c2926efea276" />

@@ -16,11 +16,6 @@ public class GameLogic {
 
     private Map<Direction, String> keyTextures = new HashMap<>();
     public GameLogic(Grid grid, Cell snakeHead) throws Exception {
-        /*terminal = TerminalBuilder.builder()
-            .dumb(true)
-            .encoding(StandardCharsets.UTF_8)
-            .build();
-        reader = terminal.reader();*/
 
         keyTextures = initializeKeyTextures();
         this.grid = grid;
@@ -104,30 +99,6 @@ public class GameLogic {
         cell.setY(snakeCells[snakeCells.length-1].getY());
         return cell;
     }
-    /*private void updateDirectionIfKeyPressed() throws IOException {
-        if (reader.ready()) {
-            int code = reader.read();
-            if (code != -1) {
-                char inputChar = (char) code;
-                switch (inputChar) {
-                    case 'w':
-                        currentDirection = Direction.UP;
-                        break;
-                    case 's':
-                        currentDirection = Direction.DOWN;
-                        break;
-                    case 'a':
-                        currentDirection = Direction.LEFT;
-                        break;
-                    case 'd':
-                        currentDirection = Direction.RIGHT;
-                        break;
-                    default:
-                        break;
-                }
-            }
-        }
-    }*/
 
     private void updateHeadPositionBasedOnDirection() {
         switch (currentDirection)
@@ -224,16 +195,4 @@ public class GameLogic {
     public Cell[] getSnakeCells() {
         return snakeCells;
     }
-
-    /*public Terminal getTerminal() {
-        return terminal;
-    }
-
-    public NonBlockingReader getReader() {
-        return reader;
-    }
-
-    public void setReader(NonBlockingReader reader) {
-        this.reader = reader;
-    }*/
 }
