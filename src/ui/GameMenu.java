@@ -8,12 +8,14 @@ import dal.Direction;
 import dal.Grid;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
 import org.jline.utils.NonBlockingReader;
 
 public class GameMenu {
+    private Scanner scanner = new Scanner(System.in);
     private Grid grid;
     private GameLogic logic;
     private NonBlockingReader reader;
@@ -38,23 +40,91 @@ public class GameMenu {
     }
 
     public void displayMenu() throws Exception {
+        clearScreen();
+        loginSystem();
         while (true) {
             clearScreen();
-            loginSystem();
             printOptions();
             handleUserInput();
         }
     }
-    private void loginSystem() {
+    /**/
+    private void loginSystem() throws IOException {
+        while (logedAccount == null) {
+            clearScreen();
+            System.out.print(getCenteredText("Provide your username:"));
+            String usernameInput = scanner.nextLine();
+
+            if (!Account.isUsernameValid(usernameInput)) {
+                displayInvalidUsernameMessage();
+                continue;
+            }
+
+            if (accService.isUsernameExistInDb(usernameInput)) {
+                handleExistingUser(usernameInput);
+            } else {
+                handleNewUser(usernameInput);
+            }
+        }
+
+    }
+
+    private void handleExistingUser(String username) throws IOException {
         clearScreen();
-        System.out.print("provide your username");
+        System.out.print(getCenteredText("Provide password for current account:"));
+        String passwordInput = scanner.nextLine();
+
+        if (!accService.isPassCorrectForCurrentUser(username, passwordInput)) {
+            displayIncorrectPasswordMessage();
+            return;
+        }
+
+        logedAccount = accService.getAccountByUserName(username);
+        clearScreen();
+    }
+
+    private void handleNewUser(String username) throws IOException {
+        clearScreen();
+        System.out.println("Provide password for new user:");
+        String passwordInput = scanner.nextLine();
+
+        if (!Account.isPassValid(passwordInput)) {
+            displayInvalidPasswordMessage();
+            return;
+        }
+
+        logedAccount = new Account(username, passwordInput);
+        accService.addAccount(logedAccount);
+        accService.arrayListToJsonFile();
+        clearScreen();
+        System.out.println(getCenteredText("Thanks for registering. Click any button."));
+        terminal.input().read();
+        clearScreen();
+    }
+
+    private void displayInvalidUsernameMessage() throws IOException {
+        System.out.println("Invalid username.");
+        reader.read();
+    }
+
+    private void displayIncorrectPasswordMessage() throws IOException {
+        clearScreen();
+        System.out.print(getCenteredText("Your password isn't correct. Provide the correct password for the current user:"));
+        terminal.input().read();
+    }
+
+    private void displayInvalidPasswordMessage() throws IOException {
+        clearScreen();
+        System.out.println(getCenteredText("Password invalid. Please input another password:"));
+        terminal.input().read();
     }
     private void printOptions() {
-        String gameMenuText = """
+        String gameMenuText = String.format("""
+            %s
             1. Play
             2. Continue
             3. Records
-            ESC. Logout""";
+            ESC. Logout""", logedAccount.getUserName());
 
         System.out.print(getCenteredText(gameMenuText));
 
@@ -66,13 +136,17 @@ public class GameMenu {
         char key = (char) terminal.input().read();
         switch (key) {
             case '1' -> startGame();
-            case 27 -> System.exit(0);  //ESC
+            case 27 ->  {
+                accService.arrayListToJsonFile();
+                System.exit(0);  //ESC
+            }
         }
     }
     private void startGame() throws Exception {
         Grid gridBuffer = new Grid(grid.getXLength(), grid.getYLength());
         Cell snakeHead = new Cell(gridBuffer);
         GameLogic logicBuffer = new GameLogic(gridBuffer, snakeHead);
+        logedAccount.runCount++;
 
         gameLoop();
         printGameOverMessage();
