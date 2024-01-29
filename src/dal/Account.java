@@ -1,8 +1,11 @@
 package dal;
 
 import dal.exception.AccountValidException;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,8 +14,10 @@ public class Account {
     private UUID id;
     private String userName;
     private String password;
-    private Set<Integer> records = new HashSet();
+    private SortedSet<Integer> records = new TreeSet<>(Comparator.naturalOrder());
     public int runCount;
+    public boolean isDefault = false;
+    public int entersCount;
     public Account(String nickName, String password) {
         this.id = UUID.randomUUID();
         setUsername(nickName);
@@ -36,14 +41,14 @@ public class Account {
     }
 
     public static boolean isUsernameValid(String username) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{2,14}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{2,30}$");
 
         Matcher matcher = pattern.matcher(username);
 
         return matcher.matches();
     }
     public static boolean isPassValid(String pass) {
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{2,14}$");
+        Pattern pattern = Pattern.compile("^[a-zA-Z0-9][a-zA-Z0-9_-]{2,30}$");
 
         Matcher matcher = pattern.matcher(pass);
 
@@ -61,7 +66,11 @@ public class Account {
         return password;
     }
 
-    public Set getRecords() {
+    public void addRecord(int record) {
+        records.add(record);
+    }
+
+    public SortedSet<Integer> getRecords() {
         return records;
     }
 

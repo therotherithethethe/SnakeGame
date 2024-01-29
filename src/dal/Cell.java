@@ -4,7 +4,7 @@ public class Cell {
     private int x = 1;
     private int y = 1;
     private final Grid grid;
-    private String texture = "O";
+    private String texture = "■";
 
     public Cell(Grid grid)
     {

@@ -2,12 +2,12 @@ package dal;
 
 public class Grid {
     private String[][] table;
-    private final int xLength;
-    private final int yLength;
+    private int xLength;
+    private int yLength;
     private final String defaultTexture = ".";
 
     public Grid(int xLength, int yLength) {
-        if (xLength <= 0 || yLength <= 0) {
+        if (xLength <= 1 || yLength <= 1) {
             throw new IllegalArgumentException("Lengths must be positive.");
         }
         this.xLength = xLength;
@@ -47,6 +47,18 @@ public class Grid {
 
     public int getYLength() {
         return yLength;
+    }
+
+    public void setxLength(int xLength) {
+        this.xLength = xLength;
+        this.table = new String[yLength][xLength];
+        initializeTable();
+    }
+
+    public void setyLength(int yLength) {
+        this.yLength = yLength;
+        this.table = new String[yLength][xLength];
+        initializeTable();
     }
 }
 

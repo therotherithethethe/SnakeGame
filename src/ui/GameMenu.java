@@ -25,7 +25,6 @@ public class GameMenu {
     private AccountService accService = AccountService.getInstance();
     private Account logedAccount;
     private boolean isUserLoged = false;
-
     int cellCounter;
 
     public GameMenu(GameLogic logic) throws IOException {
@@ -48,8 +47,24 @@ public class GameMenu {
             handleUserInput();
         }
     }
-    /**/
+    private void handleLoggedUser() {
+        for(Account account : accService.getAccounts()) {
+            if(account.isDefault) {
+               if(account.entersCount % 6 == 5) {
+                   account.entersCount = 0;
+                   return;
+               }
+               else {
+                   account.entersCount++;
+                   logedAccount = account;
+                   accService.arrayListToJsonFile();
+                   return;
+               }
+            }
+        }
+    }
     private void loginSystem() throws IOException {
+        handleLoggedUser();
         while (logedAccount == null) {
             clearScreen();
             System.out.print(getCenteredText("Provide your username:"));
@@ -80,12 +95,13 @@ public class GameMenu {
         }
 
         logedAccount = accService.getAccountByUserName(username);
+        logedAccount.isDefault = true;
         clearScreen();
     }
 
     private void handleNewUser(String username) throws IOException {
         clearScreen();
-        System.out.println("Provide password for new user:");
+        System.out.println(getCenteredText("Provide password for new user:"));
         String passwordInput = scanner.nextLine();
 
         if (!Account.isPassValid(passwordInput)) {
@@ -94,6 +110,7 @@ public class GameMenu {
         }
 
         logedAccount = new Account(username, passwordInput);
+        logedAccount.isDefault = true;
         accService.addAccount(logedAccount);
         accService.arrayListToJsonFile();
         clearScreen();
@@ -123,8 +140,10 @@ public class GameMenu {
             %s
             1. Play
             2. Continue
-            3. Records
-            ESC. Logout""", logedAccount.getUserName());
+            3. Your records
+            4. World records
+            ESC. Exit
+            Enter. Logout""", logedAccount.getUserName());
 
         System.out.print(getCenteredText(gameMenuText));
 
@@ -133,16 +152,37 @@ public class GameMenu {
         terminal.puts(InfoCmp.Capability.clear_screen);
     }
     private void handleUserInput() throws Exception {
+        accService.arrayListToJsonFile();
         char key = (char) terminal.input().read();
         switch (key) {
             case '1' -> startGame();
-            case 27 ->  {
+            case '2' -> startGame();
+            case '3' -> showCurrentAccRecords();
+            //case '4' -> //showAllRecords();
+            case '\r' ->  {
+                logedAccount.isDefault = false;
+                logedAccount.entersCount = 0;
                 accService.arrayListToJsonFile();
-                System.exit(0);  //ESC
+                logedAccount = null;
+                loginSystem();
             }
+            case 27 -> System.exit(0);
         }
     }
+    private void showCurrentAccRecords() throws IOException {
+        clearScreen();
+        StringBuilder recordslist = new StringBuilder(
+            String.format("%s records:", logedAccount.getUserName()));
+
+        for(int record : logedAccount.getRecords().reversed()) {
+            recordslist.append("\n" + record + ",");
+        }
+        recordslist.deleteCharAt(recordslist.length() - 1);
+        System.out.println(getCenteredText(recordslist.toString()));
+        terminal.input().read();
+    }
     private void startGame() throws Exception {
+        setPreference();
         Grid gridBuffer = new Grid(grid.getXLength(), grid.getYLength());
         Cell snakeHead = new Cell(gridBuffer);
         GameLogic logicBuffer = new GameLogic(gridBuffer, snakeHead);
@@ -153,16 +193,38 @@ public class GameMenu {
 
         cellCounter = 1;
         this.logic = logicBuffer;
-        //this.snakeHead = snakeHead;
         this.grid = gridBuffer;
         currentDirection = Direction.RIGHT;
     }
 
+    private void setPreference() throws Exception {
+        clearScreen();
+        System.out.println(getCenteredText("provide width length for grid:"));
+        try {
+            scanner.nextLine();
+            int width = scanner.nextInt();
+            clearScreen();
+            System.out.println(getCenteredText("provide height for grid:"));
+            int height = scanner.nextInt();
+            grid.setxLength(width);
+            grid.setyLength(height);
+            logic.setGrid(grid);
+            clearScreen();
+        }
+        catch (Exception ex) {
+            clearScreen();
+            System.out.println(getCenteredText("oops. yuor input is wrong"));
+            //ex.printStackTrace();
+            terminal.input().read();
+            displayMenu();
+        }
+
+    }
     private void gameLoop() throws InterruptedException, IOException {
         while (!logic.isGameLose() && !logic.isGameWon() && !isGameSuspended) {
             cellCounter = logic.getSnakeCells().length;
             printCurrentGameStage();
-            Thread.sleep(400);
+            Thread.sleep(270);
             setDirectionByKey();
             logic.updateGameTable(currentDirection);
         }
@@ -172,6 +234,7 @@ public class GameMenu {
     private void printGameOverMessage() throws InterruptedException, IOException {
         clearScreen();
         if (logic.isGameWon()) {
+            logedAccount.addRecord(cellCounter);
             System.out.println(getCenteredText("YOU ARE WINNER. press any key"));
         } else if (logic.isGameLose()) {
             System.out.println(getCenteredText("YOU ARE LOOSER. press any key"));

@@ -26,18 +26,24 @@ public class GameLogic {
         food.setTexture("X");
 
         initializeGameTable();
-        spawnFood();
+        //spawnFood();
     }
     private void initializeGameTable() throws Exception {
         grid.setTexture(snakeCells[0].getX(), snakeCells[0].getY(), snakeCells[0].getTexture());
     }
 
+    public void setGrid(Grid grid) throws Exception {
+        this.grid = grid;
+        initializeGameTable();
+        spawnFood();
+    }
+
     private static HashMap<Direction, String> initializeKeyTextures() {
         HashMap<Direction, String> keyTextures = new HashMap<>();
-        keyTextures.put(Direction.LEFT, "<");
-        keyTextures.put(Direction.RIGHT, ">");
-        keyTextures.put(Direction.UP, "^");
-        keyTextures.put(Direction.DOWN, "v");
+        keyTextures.put(Direction.LEFT, "◄");
+        keyTextures.put(Direction.RIGHT, "►");
+        keyTextures.put(Direction.UP, "▲");
+        keyTextures.put(Direction.DOWN, "▼");
 
         return keyTextures;
     }
