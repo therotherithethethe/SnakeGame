@@ -4,11 +4,12 @@ public class Grid {
     private String[][] table;
     private int xLength;
     private int yLength;
-    private final String defaultTexture = ".";
+    private static final String defaultTexture = ".";
+    private static final String TYPICAL_EXCEPTION = "Lengths must be reserved.";
 
     public Grid(int xLength, int yLength) {
-        if (xLength <= 1 || yLength <= 1) {
-            throw new IllegalArgumentException("Lengths must be positive.");
+        if (xLength <= 1 || yLength <= 1 || xLength >70 || yLength > 30) {
+            throw new IllegalArgumentException(TYPICAL_EXCEPTION);
         }
         this.xLength = xLength;
         this.yLength = yLength;
@@ -50,12 +51,18 @@ public class Grid {
     }
 
     public void setxLength(int xLength) {
+        if(xLength <= 1 || xLength >70)
+            throw new IllegalArgumentException(TYPICAL_EXCEPTION);
+
         this.xLength = xLength;
         this.table = new String[yLength][xLength];
         initializeTable();
     }
 
     public void setyLength(int yLength) {
+        if(yLength <= 1 || yLength >30)
+            throw new IllegalArgumentException(TYPICAL_EXCEPTION);
+
         this.yLength = yLength;
         this.table = new String[yLength][xLength];
         initializeTable();

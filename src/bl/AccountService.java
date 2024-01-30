@@ -12,8 +12,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -105,5 +103,18 @@ public class AccountService {
     }
     public List<Account> getAccounts() {
         return accounts;
+    }
+    public void deleteAccount(Account account) throws IOException {
+        readJson();
+        for(JsonElement element : jsonArray) {
+            JsonObject jsonObject = element.getAsJsonObject();
+            Account tmpaccount = gson.fromJson(jsonObject, Account.class);
+            if(account.getId().equals(tmpaccount.getId())) {
+                jsonArray.remove(jsonObject);
+                accounts.remove(account);
+                break;
+            }
+        }
+        arrayListToJsonFile();
     }
 }

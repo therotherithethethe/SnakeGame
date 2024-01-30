@@ -8,7 +8,11 @@ import dal.Direction;
 import dal.Grid;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.InputMismatchException;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.TreeMap;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
 import org.jline.utils.InfoCmp;
@@ -24,10 +28,10 @@ public class GameMenu {
     private boolean isGameSuspended = false;
     private AccountService accService = AccountService.getInstance();
     private Account logedAccount;
-    private boolean isUserLoged = false;
+    private int gameSpeed;
     int cellCounter;
 
-    public GameMenu(GameLogic logic) throws IOException {
+    public GameMenu(GameLogic logic) throws IOException { //
         terminal = TerminalBuilder.builder()
             .dumb(true)
             .encoding(StandardCharsets.UTF_8)
@@ -38,7 +42,8 @@ public class GameMenu {
         cellCounter = 1;
     }
 
-    public void displayMenu() throws Exception {
+    public void displayMenu() throws Exception { //
+
         clearScreen();
         loginSystem();
         while (true) {
@@ -135,13 +140,13 @@ public class GameMenu {
         System.out.println(getCenteredText("Password invalid. Please input another password:"));
         terminal.input().read();
     }
-    private void printOptions() {
+    private void printOptions() { //
         String gameMenuText = String.format("""
             %s
             1. Play
-            2. Continue
-            3. Your records
-            4. World records
+            2. Your records
+            3. World records
+            4. Delete account
             ESC. Exit
             Enter. Logout""", logedAccount.getUserName());
 
@@ -150,15 +155,15 @@ public class GameMenu {
     }
     private void clearScreen() {
         terminal.puts(InfoCmp.Capability.clear_screen);
-    }
+    } //
     private void handleUserInput() throws Exception {
         accService.arrayListToJsonFile();
         char key = (char) terminal.input().read();
         switch (key) {
             case '1' -> startGame();
-            case '2' -> startGame();
-            case '3' -> showCurrentAccRecords();
-            //case '4' -> //showAllRecords();
+            case '2' -> showCurrentAccRecords();
+            case '3' -> showAllRecords();
+            case '4' -> deleteAccount();
             case '\r' ->  {
                 logedAccount.isDefault = false;
                 logedAccount.entersCount = 0;
@@ -168,6 +173,34 @@ public class GameMenu {
             }
             case 27 -> System.exit(0);
         }
+    }
+    private void deleteAccount() throws Exception {
+        clearScreen();
+        accService.deleteAccount(logedAccount);
+        logedAccount = null;
+        System.out.println(getCenteredText("Account successfully deleted"));
+        terminal.input().read();
+        loginSystem();
+    }
+    private void showAllRecords() throws IOException {
+        Map<Integer, String> userRecords = new TreeMap<>(Collections.reverseOrder());
+
+        for (Account account : accService.getAccounts()) {
+            for (int record : account.getRecords()) {
+                userRecords.put(record, account.getUserName());
+            }
+        }
+
+        int i = 1;
+        StringBuilder sb = new StringBuilder();
+        for (int key : userRecords.keySet()) {
+            sb.append("\n" + i + ". " + key + " — " + userRecords.get(key));
+            i++;
+        }
+
+        clearScreen();
+        System.out.println(getCenteredText(sb.toString()));
+        terminal.input().read();
     }
     private void showCurrentAccRecords() throws IOException {
         clearScreen();
@@ -199,51 +232,78 @@ public class GameMenu {
 
     private void setPreference() throws Exception {
         clearScreen();
-        System.out.println(getCenteredText("provide width length for grid:"));
         try {
-            scanner.nextLine();
-            int width = scanner.nextInt();
+            System.out.print(getCenteredText("provide width length for grid:"));
+            int width = readIntegerFromUser();
+            if (width == -1)
+                throw new InputMismatchException();
+
             clearScreen();
             System.out.println(getCenteredText("provide height for grid:"));
-            int height = scanner.nextInt();
+            int height = readIntegerFromUser();
+            if (height == -1)
+                throw new InputMismatchException();
+
+            clearScreen();
+            System.out.println(getCenteredText("provide game speed (game updates per second):"));
+            int speed = readIntegerFromUser();
+            if (speed == -1)
+                throw new InputMismatchException();
+
+            gameSpeed = speed;
             grid.setxLength(width);
             grid.setyLength(height);
             logic.setGrid(grid);
             clearScreen();
-        }
-        catch (Exception ex) {
+        } catch (Exception ex) {
             clearScreen();
-            System.out.println(getCenteredText("oops. yuor input is wrong"));
-            //ex.printStackTrace();
+            System.out.println(getCenteredText("oops. your input is wrong. Check provided values. Returning.."));
+            terminal.input().read();
+            displayMenu();
+        }
+    }
+
+    private int readIntegerFromUser() {
+        if (!scanner.hasNextInt()) {
+            scanner.nextLine();
+            return -1;
+        }
+        int number = scanner.nextInt();
+        scanner.nextLine();
+        return number;
+    }
+
+    private void gameLoop() throws Exception {
+        while (!logic.isGameLose() && !logic.isGameWon() && !isGameSuspended) {
+            cellCounter = logic.getSnakeCells().length;
+            printCurrentGameStage();
+            Thread.sleep((long) ((float)1/gameSpeed * 1000)); //1000ms in 1 second
+            setDirectionByKey();
+            logic.updateGameTable(currentDirection);
+        }
+        if(isGameSuspended) {
+            isGameSuspended = false;
+            clearScreen();
+            System.out.println(getCenteredText("Exiting to menu...."));
             terminal.input().read();
             displayMenu();
         }
 
-    }
-    private void gameLoop() throws InterruptedException, IOException {
-        while (!logic.isGameLose() && !logic.isGameWon() && !isGameSuspended) {
-            cellCounter = logic.getSnakeCells().length;
-            printCurrentGameStage();
-            Thread.sleep(270);
-            setDirectionByKey();
-            logic.updateGameTable(currentDirection);
-        }
-        isGameSuspended = false;
     }
 
     private void printGameOverMessage() throws InterruptedException, IOException {
         clearScreen();
         if (logic.isGameWon()) {
             logedAccount.addRecord(cellCounter);
-            System.out.println(getCenteredText("YOU ARE WINNER. press any key"));
+            System.out.println(getCenteredText("YOU ARE WINNER. Victory. Press any key"));
         } else if (logic.isGameLose()) {
-            System.out.println(getCenteredText("YOU ARE LOOSER. press any key"));
+            System.out.println(getCenteredText("YOU ARE LOOSER. Game is over. Press any key"));
         }
         Thread.sleep(1500);
         terminal.input().read();
     }
 
-    public void printCurrentGameStage()
+    private void printCurrentGameStage()
     {
         clearScreen();
         StringBuilder txt = new StringBuilder();
@@ -259,7 +319,7 @@ public class GameMenu {
 
         System.out.println(getCenteredText(txt.toString()));
     }
-    private String getCenteredText(String text) {
+    private String getCenteredText(String text) { //
         int consoleWidth = terminal.getWidth();
         int consoleHeight = terminal.getHeight();
 
@@ -314,4 +374,5 @@ public class GameMenu {
             }
         }
     }
+
 }
